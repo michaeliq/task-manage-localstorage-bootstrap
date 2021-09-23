@@ -66,7 +66,7 @@ function createTaskContainer(serial) {
     list_element.classList.add('alert','list-group-item','dismissible')
 
     let element_container = document.createElement('div')
-    element_container.classList.add('alertbox','bg-danger', 'd-flex', 'justify-content-between', 'align-items-center')
+    element_container.classList.add('alertbox', 'd-flex', 'justify-content-between', 'align-items-center')
 
     let p = document.createElement('p')
     p.setAttribute('id',serial)
