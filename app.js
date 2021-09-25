@@ -139,10 +139,10 @@ function createTaskContainer(serial) {
  */
 function storeTask(serial, task, state) {
     p = document.getElementById(serial);
+    p.textContent = task
     if(!state){
         p.parentNode.childNodes[1].childNodes[0].lastChild.classList.add('update')
         p.parentNode.childNodes[1].childNodes[2].lastChild.classList.add('check_task')
-        p.textContent = task
     }else{
         p.parentNode.childNodes[1].childNodes[0].style.color = "#aaa9"
         p.parentNode.childNodes[1].childNodes[2].style.color = "#aaa9"
