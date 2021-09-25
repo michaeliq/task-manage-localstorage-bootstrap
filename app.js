@@ -9,10 +9,10 @@ document.addEventListener('DOMContentLoaded',()=>{
         let serials = loadDataLocalStorage().map((task) => {
             createTaskContainer(task.serial);
             task_list.appendChild(fragment);
-            return [task.serial,task.task]
+            return task
         })
         serials.forEach(task => {
-            storeTask(task[0],task[1])
+            storeTask(task.serial,task.task,task.state)
         })
     }
 });
@@ -27,7 +27,7 @@ form_task.addEventListener('submit',(e)=>{
     createTaskContainer(serial);
     let task = task_in.value
     task_list.appendChild(fragment);
-    storeTask(serial,task);
+    storeTask(serial,task,false);
     task_in.value = ""
     task_in.focus()
     saveDataLocalStorage(serial,task)
@@ -37,7 +37,9 @@ form_task.addEventListener('submit',(e)=>{
  * Se escucha el evento click de cada contenedor, se ubica el serial en el parrafo y se dispara removeTask pasando dicho serial
  */
 task_list.addEventListener('click',(e)=>{
-    removeTask(e)
+    removeTask(e);
+    changeState(e);
+    updateTask(e);
 })
 
 /**
@@ -56,6 +58,40 @@ function removeTask(e) {
     }
 }
 
+function changeState(e) {
+    if(e.target.classList.contains('check_task')){
+        
+        let arrayData = loadDataLocalStorage()
+        let newArrayData = arrayData.map((task) =>{
+            if(e.target.parentNode.parentNode.parentNode.childNodes[0].getAttribute('id') !== task.serial){
+                return task
+            }
+            task.state = true;
+            e.target.parentNode.parentNode.parentNode.classList.replace('alert-danger','alert-success')
+            e.target.classList.remove('check_task')
+            e.target.style.color = "#aaa9"
+            e.target.parentNode.parentNode.childNodes[0].lastChild.classList.remove('update')
+            e.target.parentNode.parentNode.childNodes[0].lastChild.style.color = "#aaa9"
+            return task
+        })
+        localStorage.setItem('tasks',JSON.stringify(newArrayData))
+    }
+}
+
+function updateTask(e) {
+    if(e.target.classList.contains('update')){
+        let arrayData = loadDataLocalStorage()
+        let newArrayData = arrayData.map((task) =>{
+            if(e.target.parentNode.parentNode.parentNode.childNodes[0].getAttribute('id') === task.serial){
+                task.task = prompt('Introduce the new concept task',task.task)
+                e.target.parentNode.parentNode.parentNode.childNodes[0].innerHTML = task.task
+            }
+            return task
+        })
+        localStorage.setItem('tasks',JSON.stringify(newArrayData))
+    }
+}
+
 /**
  * Crea un contenedor HTML en la lista mostrada al usuario, se definen los estilos CSS tomando los facilitados por bootstrap. También se definen los elementos responsables de la desaparición de la caja a dar click en el icono "trash"
  * @param {String} serial cadena de caracteres creada con createSerial
@@ -66,7 +102,7 @@ function createTaskContainer(serial) {
     list_element.classList.add('alert','list-group-item','dismissible')
 
     let element_container = document.createElement('div')
-    element_container.classList.add('alertbox', 'd-flex', 'justify-content-between', 'align-items-center')
+    element_container.classList.add('alertbox', 'alert-danger','d-flex', 'justify-content-between', 'align-items-center')
 
     let p = document.createElement('p')
     p.setAttribute('id',serial)
@@ -76,16 +112,20 @@ function createTaskContainer(serial) {
 
     let button_edit = document.createElement('button')
     let button_remove = document.createElement('button')
+    let button_check = document.createElement('button')
 
     button_edit.classList.add('task-btn', 'bg-transparent', 'border-0')
     button_remove.classList.add('task-btn', 'bg-transparent', 'border-0')
+    button_check.classList.add('task-btn', 'bg-transparent', 'border-0')
     button_remove.setAttribute('data-bs-dismiss','alert')
     button_remove.setAttribute('arial-label','Close')
+    button_check.innerHTML = '<i class="fas fa-check "></i>'
     button_edit.innerHTML= "<i class='fas fa-edit'></i>"
     button_remove.innerHTML= "<i class='fas fa-trash remove'></i>"
 
     button_container.appendChild(button_edit)
     button_container.appendChild(button_remove)
+    button_container.appendChild(button_check)
     element_container.appendChild(p)
     element_container.appendChild(button_container)
     list_element.appendChild(element_container)
@@ -97,8 +137,17 @@ function createTaskContainer(serial) {
  * @param {String} serial cadena de carcteres creada con función createSerial
  * @param {String} task tarea recibida desde formulario
  */
-function storeTask(serial, task) {
-    document.getElementById(serial).textContent = task
+function storeTask(serial, task, state) {
+    p = document.getElementById(serial);
+    if(!state){
+        p.parentNode.childNodes[1].childNodes[0].lastChild.classList.add('update')
+        p.parentNode.childNodes[1].childNodes[2].lastChild.classList.add('check_task')
+        p.textContent = task
+    }else{
+        p.parentNode.childNodes[1].childNodes[0].style.color = "#aaa9"
+        p.parentNode.childNodes[1].childNodes[2].style.color = "#aaa9"
+        p.parentNode.classList.replace('alert-danger','alert-success')
+    }
     console.log('add task')
 }
 
@@ -119,7 +168,11 @@ function loadDataLocalStorage() {
  */
 function saveDataLocalStorage(serial,task) {
     let tasks = JSON.parse(localStorage.getItem('tasks')) || []
-    let newTask = {serial:serial,task:task}
+    let newTask = {
+        serial:serial,
+        task:task,
+        state:false
+    }
     tasks.push(newTask)
     dataJson = JSON.stringify(tasks)
     localStorage.setItem('tasks',dataJson)
